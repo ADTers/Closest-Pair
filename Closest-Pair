@@ -1,0 +1,166 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+
+using namespace std;
+
+struct Point3D {
+    int x;
+    int y;
+    int z;
+};
+
+typedef int (*compfn) (const void*, const void*);
+int compare (struct Point3D *, struct Point3D *);
+
+int compare (struct Point3D *a, struct Point3D *b)
+{
+    if (a->x < b->x) return -1;
+    if (a->x == b->x) return 0;
+    if (a->x > b->x) return 1;
+}
+
+int compare2 (struct Point3D *a, struct Point3D *b)
+{
+    if (a->y < b->y) return -1;
+    if (a->y == b->y) return 0;
+    if (a->y > b->y) return 1;
+}
+
+// Mencari jarak 2 point
+float euclidean (struct Point3D a, struct Point3D b) {
+    return(sqrt((b.x-a.x)*(b.x-a.x) + (b.y-a.y)*(b.y-a.y) + (b.z-a.z)*(b.z-a.z)));
+}
+
+void BruteForce (Point3D* TP, int n, float *d, struct Point3D *a, struct Point3D *b, int *count)
+{
+    *d = 9999;
+    for (int i = 0; i < n; i++) {
+        for (int j = i+1; j < n ; j++) {
+            float temp = euclidean (TP[i], TP[j]);
+            *count = *count + 1;
+            if (*d > temp) {
+                *d = temp;
+                *a = TP[i];
+                *b = TP[j];
+            }
+        }
+    }
+}
+
+// Divide & Conquer
+void FindClosestPair (Point3D* TP, int n, float *d, struct Point3D *a, struct Point3D *b, int *count)
+{
+    div_t divresult;
+    int n2;
+    int count1 = 0, count2 = 0;
+    float d1, d2;
+    struct Point3D a1, a2, b1, b2;
+
+    if (n <= 3) {
+        BruteForce(TP, n, d, a, b, count);
+    }
+    else {
+        struct Point3D S1[500];
+        struct Point3D S2[500];
+        divresult = div(n,2);
+        n2 = divresult.quot;
+        for (int i = 0; i < n2; i++)
+            S1[i] = TP[i];
+        int k = 0;
+        for (int i = n2; i < n; i++){
+            S2[k] = TP[i];
+            k++;
+        }
+        FindClosestPair(S1, n2, &d1, &a1, &b1, &count1);
+        FindClosestPair(S2, n2, &d2, &a2, &b2, &count2);
+        *d = min(d1, d2);
+        *count = *count + count1 + count2;
+        if (*d == d1) {
+            *d = d1;
+            *a = a1;
+            *b = b1;
+        }
+        else {
+            *d = d2;
+            *a = a2;
+            *b = b2;
+        }
+
+        struct Point3D Strip[1000];
+        int s = 0;
+        for (int i = 0; i < n2; i++) { // Cari s
+            if (S1[i].x >= (TP[n2-1].x - *d)) {
+                Strip[s] = S1[i];
+                s++;
+            }
+        }
+        for (int i = 0; i < (n-n2); i++) {
+            if (S2[i].x <= (TP[n2-1].x + *d)) {
+                Strip[s] = S2[i];
+                s++;
+            }
+        }
+        qsort(&Strip, s, sizeof(struct Point3D), (compfn)compare2);
+
+        for (int i = 0; i < s; i++) {
+            for (int j = i+1; j < s; j++) {
+                if ((abs(Strip[i].x - Strip[j].x) > *d) || (abs(Strip[i].y - Strip[j].y) > *d)) {
+                    // do nothing
+                }
+                else {
+                    float d3 = euclidean(Strip[i], Strip[j]);
+                    *count = *count + 1;
+                    if (d3 < *d) {
+                        *d = d3;
+                        *a = Strip[i];
+                        *b = Strip[j];
+                    }
+                }
+            }
+        }
+    }
+}
+
+int main()
+{
+    struct Point3D TP[1000];
+    int n; // Jumlah point
+    int count = 0, dummy = 0; // Jumlah perhitungan euclidean
+    float d, d2, dur;
+    struct Point3D a, b;
+    clock_t start, finish;
+
+    srand(time(NULL));
+
+    // Inisialisasi array of point
+    cin >> n;
+    for (int i = 0; i < n; i++) {
+        TP[i].x = rand()%201 - 100;
+        TP[i].y = rand()%201 - 100;
+        TP[i].z = rand()%201 - 100;
+    }
+
+    // Sort array of point
+    qsort(&TP, n, sizeof(struct Point3D), (compfn)compare );
+
+    start = clock();
+
+    // Divide & Conquer
+    FindClosestPair(TP, n, &d, &a, &b, &count);
+
+    finish = clock();
+    dur = ((float)finish - (float)start) / CLOCKS_PER_SEC;
+
+    cout << endl << "Pasangan titik terdekat adalah = (" << a.x << ", " << a.y << ", " << a.z << ") dan (" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
+    cout << "Jarak terdekat = " << d << endl;
+    cout << "Jumlah perhitungan euclidean = " << count << endl;
+    cout << "Waktu eksekusi = " << dur << " detik" << endl << endl;
+
+    // Brute force untuk perbandingan
+    BruteForce(TP, n, &d2, &a, &b, &dummy);
+    cout << "Hasil brute force = " << d2 << endl;
+
+    return 0;
+}
