@@ -106,7 +106,7 @@ void FindClosestPair (Point3D* TP, int n, float *d, struct Point3D *a, struct Po
 
         for (int i = 0; i < s; i++) {
             for (int j = i+1; j < s; j++) {
-                if ((abs(Strip[i].x - Strip[j].x) > *d) || (abs(Strip[i].y - Strip[j].y) > *d)) {
+                if ((abs(Strip[i].x - Strip[j].x) > *d) || (abs(Strip[i].y - Strip[j].y) > *d) || (abs(Strip[i].z - Strip[j].z) > *d)) {
                     // do nothing
                 }
                 else {
@@ -135,7 +135,12 @@ int main()
     srand(time(NULL));
 
     // Inisialisasi array of point
+    cout << "Jumlah titik = ";
     cin >> n;
+    while (n <= 1) {
+        cout << "Tidak boleh" << endl <<"Jumlah titik = ";
+        cin >> n;
+    }
     for (int i = 0; i < n; i++) {
         TP[i].x = rand()%201 - 100;
         TP[i].y = rand()%201 - 100;
@@ -156,11 +161,16 @@ int main()
     cout << endl << "Pasangan titik terdekat adalah = (" << a.x << ", " << a.y << ", " << a.z << ") dan (" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
     cout << "Jarak terdekat = " << d << endl;
     cout << "Jumlah perhitungan euclidean = " << count << endl;
-    cout << "Waktu eksekusi = " << dur << " detik" << endl << endl;
+    cout << "Waktu eksekusi divide and conquer = " << dur << " detik" << endl << endl;
 
     // Brute force untuk perbandingan
     BruteForce(TP, n, &d2, &a, &b, &dummy);
-    cout << "Hasil brute force = " << d2 << endl;
+    cout << "Hasil brute force = " << d2 << endl << endl;
+
+    // Spesifikasi komputer
+    cout << "Sistem Operasi = Windows 8.1 64-bit" << endl;
+    cout << "Prosesor = Intel(R) Core(TM) i7-3630QM 2.40 GHz" << endl;
+    cout << "RAM = 8 GB" << endl;
 
     return 0;
 }
